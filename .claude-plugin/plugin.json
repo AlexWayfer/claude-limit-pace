@@ -5,6 +5,7 @@
   "author": { "name": "AlexWayfer", "url": "https://github.com/AlexWayfer" },
   "homepage": "https://github.com/AlexWayfer/claude-limit-pace",
   "repository": "https://github.com/AlexWayfer/claude-limit-pace",
+  "license": "MIT",
   "keywords": ["mod", "function-hooks", "usage", "rate-limits", "pace"],
   "types": "./types/index.d.ts",
   "userConfig": {

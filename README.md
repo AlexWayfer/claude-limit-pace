@@ -58,6 +58,12 @@ What it reads and writes:
 Known limits of the desktop app: it hides the band while its own next-step card is shown, and
 its plugin page shows no settings for a plugin installed from the command line.
 
+## Privacy
+
+Limit pace collects no data and sends nothing anywhere. It reads the rate-limit figures Claude Code
+already holds for your session, and keeps the choices you make in its ⚙ pane in the plugin's local
+store on your machine. Nothing leaves your computer, and there is no account, analytics or tracking.
+
 ## Similar plugins
 
 - [Usage Bars](https://github.com/pepperonas/usage-bars): animated bars under the prompt with a

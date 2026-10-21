@@ -6,6 +6,13 @@
   "homepage": "https://github.com/AlexWayfer/claude-limit-pace",
   "repository": "https://github.com/AlexWayfer/claude-limit-pace",
   "license": "MIT",
+  "documentationUrl": "https://github.com/AlexWayfer/claude-limit-pace#readme",
+  "supportUrl": "https://github.com/AlexWayfer/claude-limit-pace/issues",
+  "privacyPolicyUrl": "https://github.com/AlexWayfer/claude-limit-pace#privacy",
+  "classification": {
+    "object_acted_on": ["claude-settings"],
+    "work_department": "engineering"
+  },
   "keywords": ["mod", "function-hooks", "usage", "rate-limits", "pace"],
   "types": "./types/index.d.ts",
   "userConfig": {

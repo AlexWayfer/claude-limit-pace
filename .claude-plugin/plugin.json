@@ -1,0 +1,61 @@
+{
+  "name": "limit-pace",
+  "version": "0.1.0",
+  "description": "Band above the prompt showing plan usage against an even pace through the weekly and 5-hour windows",
+  "author": { "name": "AlexWayfer", "url": "https://github.com/AlexWayfer" },
+  "homepage": "https://github.com/AlexWayfer/claude-limit-pace",
+  "repository": "https://github.com/AlexWayfer/claude-limit-pace",
+  "keywords": ["mod", "function-hooks", "usage", "rate-limits", "pace"],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "week": {
+      "type": "string",
+      "title": "Week",
+      "description": "When to show the weekly window: always, only when close to or ahead of an even pace (yellow or red), or never",
+      "options": ["Always", "When close", "Never"],
+      "default": "Always"
+    },
+    "session": {
+      "type": "string",
+      "title": "Session",
+      "description": "When to show the 5-hour window: always, only when close to or ahead of an even pace (yellow or red), or never",
+      "options": ["Always", "When close", "Never"],
+      "default": "Always"
+    },
+    "threshold": {
+      "type": "number",
+      "title": "Close within, %",
+      "description": "How far below an even pace usage turns yellow and counts as close; 0 = only exactly on pace",
+      "default": 0,
+      "min": 0,
+      "max": 100
+    },
+    "format": {
+      "type": "string",
+      "title": "Figures",
+      "description": "Used share over the even-pace share (41% / 29%), or how far usage runs from that pace (+12%)",
+      "options": ["Used / pace", "Deviation"],
+      "default": "Used / pace"
+    },
+    "ring": {
+      "type": "string",
+      "title": "Usage ring",
+      "description": "Where each window's usage ring goes, with a tick at an even pace (desktop only)",
+      "options": ["Nowhere", "Start", "After figures", "End"],
+      "default": "After figures"
+    },
+    "show_reset": {
+      "type": "boolean",
+      "title": "Show time to reset",
+      "description": "Show the time left until each window resets, in parentheses after the figures",
+      "default": false
+    },
+    "separator": {
+      "type": "string",
+      "title": "Separator",
+      "description": "Mark between the weekly and the session figures",
+      "options": ["|", "·", "•", "/", "—"],
+      "default": "|"
+    }
+  }
+}

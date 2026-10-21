@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { ConfigValue, EngineInterface, Register, SessionRateLimit } from 'claude-code'
+import type { EngineInterface, Register, SessionRateLimit } from 'claude-code'
 
 import type { Limit } from '../types'
 
@@ -94,39 +94,45 @@ const formatLeft = (ms: number) => {
   return `${minutes}m`
 }
 
-// Writes one userConfig field as the /config menu would, so it lands in settings.json
-const saveOption = async ($: EngineInterface, field: string, value: ConfigValue) => {
-  const row = (await $.config.list()).find(
-    one => one.key.startsWith('limit-pace') && one.key.endsWith(`.${field}`),
-  )
-  if (!row) {
-    $.ui.toast(`Limit pace: no /config row for ${field}, kept for this session only`)
-    return
-  }
-  const { deny } = await $.config.set({ key: row.key, value })
-  if (deny) $.ui.toast(`Limit pace: ${deny}`)
+const toFormat = (value: unknown) => (value === DEVIATION ? DEVIATION : USED_OVER_PACE)
+
+const toSeparator = (value: unknown) =>
+  typeof value === 'string' && SEPARATORS.includes(value) ? value : '|'
+
+const toRingPlace = (value: unknown) =>
+  typeof value === 'string' && RING_PLACES.includes(value) ? value : RING_AFTER_FIGURES
+
+// A choice made in the ⚙ pane is kept in the plugin's own store, not written to the settings,
+// together with the setting's value it replaced: once that setting changes, the setting wins
+type Choice = { value: unknown; option: unknown }
+
+const sameOption = (one: unknown, other: unknown) =>
+  JSON.stringify(one ?? null) === JSON.stringify(other ?? null)
+
+const chosen = async ($: EngineInterface, field: string, option: unknown) => {
+  const stored = (await $.store.get(`choice.${field}`)) as Choice | undefined
+  return stored && sameOption(stored.option, option) ? stored.value : option
 }
 
-export const register: Register = (on, options) => {
-  const weekOption = toVisibility(options.week)
-  const sessionOption = toVisibility(options.session)
-  const thresholdOption = toThreshold(options.threshold)
-  const formatOption = options.format === DEVIATION ? DEVIATION : USED_OVER_PACE
-  const separatorOption = typeof options.separator === 'string' ? options.separator : '|'
-  const showResetOption = options.show_reset === true
-  const ringOption =
-    typeof options.ring === 'string' && RING_PLACES.includes(options.ring)
-      ? options.ring
-      : RING_AFTER_FIGURES
+const choose = ($: EngineInterface, field: string, value: unknown, option: unknown) =>
+  $.store.set(`choice.${field}`, { value, option: option ?? null })
 
+export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
-    await update($, weekShown, () => weekOption)
-    await update($, sessionShown, () => sessionOption)
-    await update($, threshold, () => thresholdOption)
-    await update($, format, () => formatOption)
-    await update($, separator, () => separatorOption)
-    await update($, showReset, () => showResetOption)
-    await update($, ringPlace, () => ringOption)
+    const week = toVisibility(await chosen($, 'week', options.week))
+    const session = toVisibility(await chosen($, 'session', options.session))
+    const margin = toThreshold(await chosen($, 'threshold', options.threshold))
+    const figures = toFormat(await chosen($, 'format', options.format))
+    const mark = toSeparator(await chosen($, 'separator', options.separator))
+    const isResetShown = (await chosen($, 'show_reset', options.show_reset)) === true
+    const place = toRingPlace(await chosen($, 'ring', options.ring))
+    await update($, weekShown, () => week)
+    await update($, sessionShown, () => session)
+    await update($, threshold, () => margin)
+    await update($, format, () => figures)
+    await update($, separator, () => mark)
+    await update($, showReset, () => isResetShown)
+    await update($, ringPlace, () => place)
     const usage = await $.session.usage()
     await update($, limits, () => toLimits(usage.rateLimits))
     const at = await $.clock.now()
@@ -312,7 +318,7 @@ export const register: Register = (on, options) => {
           value={week}
           onSelect={value => {
             void update($, weekShown, () => value)
-            void saveOption($, 'week', value)
+            void choose($, 'week', value, options.week)
           }}
         />
         <Select
@@ -322,7 +328,7 @@ export const register: Register = (on, options) => {
           value={session}
           onSelect={value => {
             void update($, sessionShown, () => value)
-            void saveOption($, 'session', value)
+            void choose($, 'session', value, options.session)
           }}
         />
         {/* Input takes no width of its own: a narrow Box keeps a percent field from spanning the pane */}
@@ -341,7 +347,7 @@ export const register: Register = (on, options) => {
                   return
                 }
                 void update($, threshold, () => value)
-                void saveOption($, 'threshold', value)
+                void choose($, 'threshold', value, options.threshold)
               }}
             />
           </Box>
@@ -353,7 +359,7 @@ export const register: Register = (on, options) => {
           value={figures}
           onSelect={value => {
             void update($, format, () => value)
-            void saveOption($, 'format', value)
+            void choose($, 'format', value, options.format)
           }}
         />
         <Select
@@ -363,7 +369,7 @@ export const register: Register = (on, options) => {
           value={place}
           onSelect={value => {
             void update($, ringPlace, () => value)
-            void saveOption($, 'ring', value)
+            void choose($, 'ring', value, options.ring)
           }}
         />
         <Select
@@ -377,7 +383,7 @@ export const register: Register = (on, options) => {
           onSelect={value => {
             const isOn = value === 'on'
             void update($, showReset, () => isOn)
-            void saveOption($, 'show_reset', isOn)
+            void choose($, 'show_reset', isOn, options.show_reset)
           }}
         />
         <Select
@@ -387,7 +393,7 @@ export const register: Register = (on, options) => {
           value={mark}
           onSelect={value => {
             void update($, separator, () => value)
-            void saveOption($, 'separator', value)
+            void choose($, 'separator', value, options.separator)
           }}
         />
         <Button

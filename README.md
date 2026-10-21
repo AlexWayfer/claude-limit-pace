@@ -29,7 +29,9 @@ limits. It needs a claude.ai Pro or Max plan.
 
 ## Settings
 
-Press ⚙ at the right end of the line, or use `/config` in a terminal session:
+The plugin's settings (`/config` in a terminal session, or the plugin's settings page) set the
+defaults. Press ⚙ at the right end of the line to change them from the line itself: a choice made
+there is kept in the plugin's own store across sessions, until you change that setting again.
 
 | Setting | Values | Default |
 | --- | --- | --- |
@@ -46,6 +48,12 @@ It is a [hooks-module mod](https://code.claude.com/docs/en/plugins/mods/referenc
 `AbovePrompt` band from the rate-limit windows Claude Code reports with each answer
 (`session.measure`, `$.session.usage()`). A window past its reset time is hidden until a fresh
 reading arrives.
+
+What it reads and writes:
+
+- reads the rate-limit figures and the reset times Claude Code already has;
+- keeps the choices made in the ⚙ pane in its own plugin store (`$.store`), keyed `choice.<setting>`;
+- changes no Claude Code settings, runs no commands, and sends nothing over the network.
 
 Known limits of the desktop app: it hides the band while its own next-step card is shown, and
 its plugin page shows no settings for a plugin installed from the command line.

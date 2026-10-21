@@ -31,11 +31,12 @@ const SETTINGS = {
   },
 } as const
 
-// What the stand-in /config menu was asked to write
-const saved: { key: string; value: unknown }[] = []
-
-const start = async ($: any, on: any, rateLimits: SessionUsage['rateLimits']) => {
-  saved.length = 0
+const start = async (
+  $: any,
+  on: any,
+  rateLimits: SessionUsage['rateLimits'],
+  stored: Record<string, unknown> = {},
+) => {
   // Stands for the engine when the mod passes
   on('ui.render', ($: any, e: any) => {
     const { Text } = $.ui.resolve(e)
@@ -43,22 +44,7 @@ const start = async ($: any, on: any, rateLimits: SessionUsage['rateLimits']) =>
     return <Text>engine</Text>
   })
   on('ui.open', () => ({ value: { isPlaced: true } }))
-  on('config.list', () => ({
-    value: [
-      { key: 'limit-pace@alexw-local.week', label: 'Week', kind: 'choice', value: 'Always' },
-      { key: 'limit-pace@alexw-local.session', label: 'Session', kind: 'choice', value: 'Always' },
-      { key: 'limit-pace@alexw-local.threshold', label: 'Close within, %', kind: 'number', value: 0 },
-      { key: 'limit-pace@alexw-local.format', label: 'Figures', kind: 'choice', value: 'Used / pace' },
-      { key: 'limit-pace@alexw-local.separator', label: 'Separator', kind: 'choice', value: '|' },
-      { key: 'limit-pace@alexw-local.show_reset', label: 'Show time to reset', kind: 'toggle', value: true },
-      { key: 'limit-pace@alexw-local.ring', label: 'Usage ring', kind: 'choice', value: 'After figures' },
-    ],
-  }))
-  on('config.set', (_: unknown, e: { key: string; value: unknown }) => {
-    saved.push({ key: e.key, value: e.value })
-
-    return { value: e.value }
-  })
+  mock.store(on, stored)
   mock.clock(on, { now: NOW })
   on('session.usage', () => ({ value: { startedAt: NOW, context: {}, rateLimits } }))
   on('session.start', (_: unknown, e: { cwd: string }) => ({ cwd: e.cwd }))
@@ -151,7 +137,7 @@ test(
   },
 )
 
-test('the settings pane changes the band and saves to /config', async ($, on) => {
+test('the settings pane changes the band and keeps each choice in the store', async ($, on) => {
   await start($, on, [
     { kind: 'seven_day', percentUsed: 41.3, resetsAt: new Date(NOW + 5 * 24 * HOUR).toISOString() },
     { kind: 'five_hour', percentUsed: 10, resetsAt: new Date(NOW + 3 * HOUR).toISOString() },
@@ -194,15 +180,44 @@ test('the settings pane changes the band and saves to /config', async ($, on) =>
   await pane.select({ key: 'session', value: 'Never' })
   expect((await band.find({ type: 'Text', text: /Week/ }))?.text).toBe('Week +12% (5d 0h)')
 
-  expect(saved).toEqual([
-    { key: 'limit-pace@alexw-local.separator', value: '•' },
-    { key: 'limit-pace@alexw-local.show_reset', value: true },
-    { key: 'limit-pace@alexw-local.format', value: 'Deviation' },
-    { key: 'limit-pace@alexw-local.threshold', value: 30 },
-    { key: 'limit-pace@alexw-local.session', value: 'Never' },
-  ])
+  // A new session reads the choices back from the store rather than the (unset) settings
   await pane.unmount()
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  expect((await band.find({ type: 'Text', text: /Week/ }))?.text).toBe('Week +12% (5d 0h)')
+  expect((await band.find({ type: 'Text', text: /^\+12%$/ }))?.props.color).toBe('error')
   await band.unmount()
+})
+
+test('a stored choice applies while its setting is unchanged', { options: { separator: '/' } }, async ($, on) => {
+  await start(
+    $,
+    on,
+    [
+      { kind: 'seven_day', percentUsed: 41.3, resetsAt: new Date(NOW + 5 * 24 * HOUR).toISOString() },
+      { kind: 'five_hour', percentUsed: 10, resetsAt: new Date(NOW + 3 * HOUR).toISOString() },
+    ],
+    { 'choice.separator': { value: '•', option: '/' } },
+  )
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text', text: /Week/ }))?.text).toBe('Week 41% / 29%  •  Session 10% / 40%')
+  await ui.unmount()
+})
+
+test('a changed setting wins over an older stored choice', { options: { separator: '—' } }, async ($, on) => {
+  await start(
+    $,
+    on,
+    [
+      { kind: 'seven_day', percentUsed: 41.3, resetsAt: new Date(NOW + 5 * 24 * HOUR).toISOString() },
+      { kind: 'five_hour', percentUsed: 10, resetsAt: new Date(NOW + 3 * HOUR).toISOString() },
+    ],
+    { 'choice.separator': { value: '•', option: '/' } },
+  )
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text', text: /Week/ }))?.text).toBe('Week 41% / 29%  —  Session 10% / 40%')
+  await ui.unmount()
 })
 
 test('the deviation format shows the signed gap to an even pace', { options: { format: 'Deviation' } }, async ($, on) => {

@@ -1,6 +1,6 @@
 {
   "name": "limit-pace",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Band above the prompt showing plan usage against an even pace through the weekly and 5-hour windows",
   "author": { "name": "AlexWayfer", "url": "https://github.com/AlexWayfer" },
   "homepage": "https://github.com/AlexWayfer/claude-limit-pace",

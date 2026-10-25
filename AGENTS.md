@@ -73,7 +73,8 @@ the marketplace clone with "Filename too long".
   Context).
 - Its plugin page shows no settings for a plugin installed from the command line, hence the ⚙
   pane.
-- It lays a `Box` width out in pixels, the terminal in cells: `width={10}` drew a field about
-  28 px wide, too narrow to show or type a number. Size a `Box` per `e.surface`.
+- Its `Box` width unit is about 4 px, the terminal's a cell: `width={10}` drew a field about 28 px
+  wide, too narrow to show a number, and `width={64}` about 225 px. Nothing documents the unit;
+  size a `Box` per `e.surface`.
 - A similar mod, [Usage Bars](https://github.com/pepperonas/usage-bars), draws `PromptHint` under
   the prompt instead.

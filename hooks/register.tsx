@@ -332,10 +332,10 @@ export const register: Register = (on, options) => {
           }}
         />
         {/* Input takes no width of its own: a narrow Box keeps a percent field from spanning the
-            pane. The desktop lays a Box width out in pixels, the terminal in cells */}
+            pane. The desktop's width unit is about 4 px, the terminal's a cell */}
         <Box key="threshold-row" flexDirection="row" alignItems="center" gap="sm">
           <Text>Close within, %</Text>
-          <Box key="threshold-field" width={e.surface === 'desktop' ? 64 : 10}>
+          <Box key="threshold-field" width={e.surface === 'desktop' ? 16 : 10}>
             <Input
               key="threshold"
               placeholder="0"

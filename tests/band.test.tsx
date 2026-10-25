@@ -193,9 +193,9 @@ test('the threshold field holds its value and fits it on each surface', { option
     { kind: 'seven_day', percentUsed: 41.3, resetsAt: new Date(NOW + 5 * 24 * HOUR).toISOString() },
   ])
 
-  // The desktop lays a Box width out in pixels, the terminal in cells
+  // The desktop's Box width unit is about 4 px (10 drew ~28 px, 64 drew ~225 px); the terminal's is a cell
   for (const [surface, width] of [
-    ['desktop', 64],
+    ['desktop', 16],
     ['terminal', 10],
   ] as const) {
     const pane = await $.ui.mount({ ...SETTINGS, surface })

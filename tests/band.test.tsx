@@ -188,6 +188,23 @@ test('the settings pane changes the band and keeps each choice in the store', as
   await band.unmount()
 })
 
+test('the threshold field holds its value and fits it on each surface', { options: { threshold: 5 } }, async ($, on) => {
+  await start($, on, [
+    { kind: 'seven_day', percentUsed: 41.3, resetsAt: new Date(NOW + 5 * 24 * HOUR).toISOString() },
+  ])
+
+  // The desktop lays a Box width out in pixels, the terminal in cells
+  for (const [surface, width] of [
+    ['desktop', 64],
+    ['terminal', 10],
+  ] as const) {
+    const pane = await $.ui.mount({ ...SETTINGS, surface })
+    expect((await pane.find({ type: 'Input', key: 'threshold' }))?.props.value).toBe('5')
+    expect((await pane.find({ type: 'Box', key: 'threshold-field' }))?.props.width).toBe(width)
+    await pane.unmount()
+  }
+})
+
 test('a stored choice applies while its setting is unchanged', { options: { separator: '/' } }, async ($, on) => {
   await start(
     $,
